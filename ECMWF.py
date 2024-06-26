@@ -2,6 +2,7 @@ import openmeteo_requests
 import requests_cache
 import pandas as pd
 from retry_requests import retry
+from utils import closest_quarters, bilinear_interpolation
 
 
 # Setup parameters for open-meteo forecast
@@ -21,11 +22,14 @@ retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 for i in range(len(latitude)):
+    # Get the closest coordinates
+    closest_latitude = closest_quarters(latitude[i])
+    closest_longitude = closest_quarters(longitude[i])
     # API call
     url = "https://api.open-meteo.com/v1/ecmwf"
     params = {
-        "latitude": latitude[i],
-        "longitude": longitude[i],
+        "latitude": [closest_latitude[0], closest_latitude[1], closest_latitude[0], closest_latitude[1]],
+        "longitude": [closest_longitude[0], closest_longitude[1], closest_longitude[1], closest_longitude[0]],
         "hourly": ["temperature_2m", "precipitation"],
         "past_days": past_days,
         "forecast_days": forecast_days
@@ -43,6 +47,13 @@ for i in range(len(latitude)):
     hourly = response.Hourly()
     hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
     hourly_precipitation = hourly.Variables(1).ValuesAsNumpy()
+
+    temp = bilinear_interpolation(latitude[i], longitude[i], responses[0].Latitude(), responses[1].Latitude(),
+                         responses[0].Longitude(), responses[1].Longitude(),
+                         responses[0].Hourly().Variables(0).ValuesAsNumpy(),
+                         responses[1].Hourly().Variables(0).ValuesAsNumpy(),
+                         responses[2].Hourly().Variables(0).ValuesAsNumpy(),
+                         responses[3].Hourly().Variables(0).ValuesAsNumpy())
 
     hourly_data = {"date": pd.date_range(
         start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
