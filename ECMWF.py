@@ -2,6 +2,7 @@ import openmeteo_requests
 import requests_cache
 import pandas as pd
 from retry_requests import retry
+from datetime import datetime
 from utils import closest_quarters, bilinear_interpolation
 
 
@@ -16,15 +17,19 @@ meteo_station = ["Пљевља", "Колашин", "Златибор", "Сјен
 past_days = 3  # weather info for how many past days
 forecast_days = 7  # weather info for how many future days (forecast)
 
-# Setup the Open-Meteo API client with cache and retry on error
+# Create a filename with today's date to write results
+filename = datetime.now().strftime("ecmwf_%Y-%m-%d.csv")
+
+# Setup Open-Meteo API client with cache and retry on error
 cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
 retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 for i in range(len(latitude)):
-    # Get the closest coordinates
+    # Get four closest coordinates (open-meteo has 0.25 resolution)
     closest_latitude = closest_quarters(latitude[i])
     closest_longitude = closest_quarters(longitude[i])
+
     # API call
     url = "https://api.open-meteo.com/v1/ecmwf"
     params = {
@@ -36,18 +41,17 @@ for i in range(len(latitude)):
     }
     responses = openmeteo.weather_api(url, params=params)
 
-    # Process first location. Add a for-loop for multiple locations or weather models
-    response = responses[0]
-    print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-    print(f"Elevation {response.Elevation()} m asl")
-    print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
-    print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+    # Print out meteo station info
+    print(f"Meteo station {meteo_station[i]}")
+    print(f"True coordinates {latitude[i]}°N {longitude[i]}°E")
+    print(f"Coordinates of closest 4 points: [{responses[0].Latitude()}°N {responses[0].Longitude()}°N],"
+          f"[{responses[1].Latitude()}°N {responses[1].Longitude()}°N],"
+          f"[{responses[2].Latitude()}°N {responses[2].Longitude()}°N],"
+          f"[{responses[3].Latitude()}°N {responses[3].Longitude()}°N]")
+    print(f"Timezone {responses[0].Timezone()} {responses[0].TimezoneAbbreviation()}")
+    print(f"Timezone difference to GMT+0 {responses[0].UtcOffsetSeconds()} s")
 
-    # Process hourly data. The order of variables needs to be the same as requested.
-    hourly = response.Hourly()
-    hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-    hourly_precipitation = hourly.Variables(1).ValuesAsNumpy()
-
+    # Interpolate weather from four closest points
     temp = bilinear_interpolation(latitude[i], longitude[i], responses[0].Latitude(), responses[1].Latitude(),
                          responses[0].Longitude(), responses[1].Longitude(),
                          responses[0].Hourly().Variables(0).ValuesAsNumpy(),
@@ -55,13 +59,22 @@ for i in range(len(latitude)):
                          responses[2].Hourly().Variables(0).ValuesAsNumpy(),
                          responses[3].Hourly().Variables(0).ValuesAsNumpy())
 
-    hourly_data = {"date": pd.date_range(
-        start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
-        end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
-        freq=pd.Timedelta(seconds=hourly.Interval()),
-        inclusive="left"
-    ), "temperature_2m": hourly_temperature_2m, "precipitation": hourly_precipitation}
+    precipitation = bilinear_interpolation(latitude[i], longitude[i], responses[0].Latitude(), responses[1].Latitude(),
+                                  responses[0].Longitude(), responses[1].Longitude(),
+                                  responses[0].Hourly().Variables(1).ValuesAsNumpy(),
+                                  responses[1].Hourly().Variables(1).ValuesAsNumpy(),
+                                  responses[2].Hourly().Variables(1).ValuesAsNumpy(),
+                                  responses[3].Hourly().Variables(1).ValuesAsNumpy())
 
-    print(meteo_station[i])
+    # Create data frame from open-meteo results
+    hourly_data = {"Метеоролошка станица": [meteo_station[i]]*len(temp),
+                   "Датум и време": pd.date_range(
+                    start=pd.to_datetime(responses[0].Hourly().Time(), unit="s", utc=True),
+                    end=pd.to_datetime(responses[0].Hourly().TimeEnd(), unit="s", utc=True),
+                    freq=pd.Timedelta(seconds=responses[0].Hourly().Interval()),
+                    inclusive="left"),
+                   "Температура": temp, "Падавине": precipitation}
     hourly_dataframe = pd.DataFrame(data=hourly_data)
-    print(hourly_dataframe)
+
+    # Append to CSV, only include header in the first iteration
+    hourly_dataframe.to_csv(filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
