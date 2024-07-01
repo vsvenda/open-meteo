@@ -8,6 +8,36 @@ def closest_quarters(n):
     return [lower, upper]
 
 
+def inverse_distance_weighting(x, y, points, values, power=2):
+    """
+    Perform Inverse Distance Weighting (IDW) interpolation.
+    Parameters:
+    x, y: The coordinates of the point to interpolate
+    points: A list of tuples containing the coordinates of the known data points
+    values: A list of values at the known data points
+    power: The power parameter which controls how the weight decreases with distance
+    Returns:
+    Interpolated value at the point (x, y)
+    """
+    # Initialize numerator and denominator for IDW
+    weighted_sum = 0
+    weight_sum = 0
+    # Compute weights and weighted values
+    for (x0, y0), v in zip(points, values):
+        distance = np.sqrt((x - x0)**2 + (y - y0)**2)
+        if distance > 0:  # To avoid division by zero
+            weight = 1 / distance**power
+            weighted_sum += weight * v
+            weight_sum += weight
+        else:
+            # If the target point coincides with one of the data points
+            return v
+    # Compute the final interpolated value
+    if weight_sum > 0:
+        return weighted_sum / weight_sum
+    else:
+        return None
+
 def bilinear_interpolation(x, y, x1, x2, y1, y2, T11, T12, T21, T22):
     """
     Perform bilinear or linear interpolation for arrays.

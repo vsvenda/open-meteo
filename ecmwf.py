@@ -3,7 +3,7 @@ import requests_cache
 import pandas as pd
 from retry_requests import retry
 from datetime import datetime
-from utils import closest_quarters, bilinear_interpolation
+from utils import closest_quarters, bilinear_interpolation, inverse_distance_weighting
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -58,20 +58,17 @@ for i in range(len(latitude)):
     print(f"Timezone {responses[0].Timezone()} {responses[0].TimezoneAbbreviation()}")
     print(f"Timezone difference to GMT+0 {responses[0].UtcOffsetSeconds()} s")
 
-    # Interpolate weather from four closest points
-    temp = bilinear_interpolation(latitude[i], longitude[i], responses[0].Latitude(), responses[1].Latitude(),
-                         responses[0].Longitude(), responses[1].Longitude(),
-                         responses[0].Hourly().Variables(0).ValuesAsNumpy(),
-                         responses[1].Hourly().Variables(0).ValuesAsNumpy(),
-                         responses[2].Hourly().Variables(0).ValuesAsNumpy(),
-                         responses[3].Hourly().Variables(0).ValuesAsNumpy())
-
-    precipitation = bilinear_interpolation(latitude[i], longitude[i], responses[0].Latitude(), responses[1].Latitude(),
-                                  responses[0].Longitude(), responses[1].Longitude(),
-                                  responses[0].Hourly().Variables(1).ValuesAsNumpy(),
-                                  responses[1].Hourly().Variables(1).ValuesAsNumpy(),
-                                  responses[2].Hourly().Variables(1).ValuesAsNumpy(),
-                                  responses[3].Hourly().Variables(1).ValuesAsNumpy())
+    # Interpolate weather from near points
+    points = [(responses[0].Latitude(), responses[0].Longitude()), (responses[1].Latitude(), responses[1].Longitude()),
+              (responses[2].Latitude(), responses[2].Longitude()), (responses[3].Latitude(), responses[3].Longitude())]
+    # Temperature
+    values_temp = [responses[0].Hourly().Variables(0).ValuesAsNumpy(), responses[1].Hourly().Variables(0).ValuesAsNumpy(),
+                   responses[2].Hourly().Variables(0).ValuesAsNumpy(), responses[3].Hourly().Variables(0).ValuesAsNumpy()]
+    temp = inverse_distance_weighting(latitude[i], longitude[i], points, values_temp)
+    # Precipitation
+    values_prec = [responses[0].Hourly().Variables(1).ValuesAsNumpy(), responses[1].Hourly().Variables(1).ValuesAsNumpy(),
+                   responses[2].Hourly().Variables(1).ValuesAsNumpy(), responses[3].Hourly().Variables(1).ValuesAsNumpy()]
+    precipitation = inverse_distance_weighting(latitude[i], longitude[i], points, values_prec)
 
     # Create data frame from open-meteo results
     hourly_data = {"Метеоролошка станица": [meteo_station[i]]*len(temp),
