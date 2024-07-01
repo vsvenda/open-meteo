@@ -6,6 +6,13 @@ from datetime import datetime
 from utils import closest_quarters, bilinear_interpolation
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# ECMWF Weather Forecast API
+# Global High Frequency Forecasts at 0.25° resolution
+# The API utilizes open-data ECMWF weather forecasts from the IFS weather model,
+# which has a resolution of 25 km and 3-hourly values.
+# ----------------------------------------------------------------------------------------------------------------------
+
 # Setup parameters for open-meteo forecast
 latitude = [43.35, 42.83, 43.74, 43.27, 43.80, 43.52, 43.16, 43.16, 42.85, 43.04, 42.60, 42.84, 42.96,
             42.96, 42.73, 44.54, 44.76, 43.26, 44.09, 43.51, 44.44, 43.62, 43.93, 43.95]  # coordinates
@@ -14,8 +21,8 @@ longitude = [19.36, 19.52, 19.71, 19.99, 19.30, 18.79, 18.85, 19.12, 19.88, 19.7
 meteo_station = ["Пљевља", "Колашин", "Златибор", "Сјеница", "Вишеград", "Фоча", "Плужине", "Жабљак",
                  "Беране", "Бијело Поље", "Плав", "Рожаје", "Мојковац", "Шавник", "Андријевица", "Лозница",
                  "Бијељина", "Чемерно", "Хан Пијесак", "Калиновик", "Зворник", "Рудо", "Соколац", "Горажде"]
-past_days = 3  # weather info for how many past days
-forecast_days = 7  # weather info for how many future days (forecast)
+past_days = 3  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
+forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 5, 7, 10, 15)
 
 # Create a filename with today's date to write results
 filename = datetime.now().strftime("ecmwf_%Y-%m-%d.csv")
