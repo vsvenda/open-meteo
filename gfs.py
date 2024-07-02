@@ -1,6 +1,8 @@
 import openmeteo_requests
 import requests_cache
 import pandas as pd
+import sys
+import numpy as np
 from retry_requests import retry
 from datetime import datetime
 from utils import closest_quarters, inverse_distance_weighting
@@ -24,7 +26,13 @@ past_days = 3  # weather info for how many past days (possible values: 0, 1, 2, 
 forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 7, 14, 16)
 
 # Create a filename with today's date to write results
-filename = datetime.now().strftime("gfs_%Y-%m-%d.csv")
+csv_filename = datetime.now().strftime("gfs_%Y-%m-%d.csv")
+
+# Create log file based on today's date and redirect print statements to it
+today_date = datetime.now().strftime('gsf_%Y-%m-%d')
+log_filename = f'{today_date}.txt'
+f = open(log_filename, 'w', encoding='utf-8')
+sys.stdout = f
 
 # Setup Open-Meteo API client with cache and retry on error
 cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
@@ -48,14 +56,12 @@ for i in range(len(latitude)):
     responses = openmeteo.weather_api(url, params=params)
 
     # Print out meteo station info
-    print(f"Meteo station {meteo_station[i]}")
+    print(f"\nMeteo station {meteo_station[i]}")
     print(f"True coordinates {latitude[i]}°N {longitude[i]}°E")
     print(f"Coordinates of closest 4 points: [{responses[0].Latitude()}°N {responses[0].Longitude()}°N],"
           f"[{responses[1].Latitude()}°N {responses[1].Longitude()}°N],"
           f"[{responses[2].Latitude()}°N {responses[2].Longitude()}°N],"
           f"[{responses[3].Latitude()}°N {responses[3].Longitude()}°N]")
-    print(f"Timezone {responses[0].Timezone()} {responses[0].TimezoneAbbreviation()}")
-    print(f"Timezone difference to GMT+0 {responses[0].UtcOffsetSeconds()} s")
 
     # Interpolate weather from near points
     points = [(responses[0].Latitude(), responses[0].Longitude()), (responses[1].Latitude(), responses[1].Longitude()),
@@ -66,12 +72,14 @@ for i in range(len(latitude)):
                    responses[2].Hourly().Variables(0).ValuesAsNumpy(),
                    responses[3].Hourly().Variables(0).ValuesAsNumpy()]
     temp = inverse_distance_weighting(latitude[i], longitude[i], points, values_temp)
+    temp = np.around(temp, decimals=2)  # round to 2 decimals
     # Precipitation
     values_prec = [responses[0].Hourly().Variables(1).ValuesAsNumpy(),
                    responses[1].Hourly().Variables(1).ValuesAsNumpy(),
                    responses[2].Hourly().Variables(1).ValuesAsNumpy(),
                    responses[3].Hourly().Variables(1).ValuesAsNumpy()]
     precipitation = inverse_distance_weighting(latitude[i], longitude[i], points, values_prec)
+    precipitation = np.around(precipitation, decimals=2)  # round to 2 decimals
 
     # Create data frame from open-meteo results
     hourly_data = {"Метеоролошка станица": [meteo_station[i]]*len(temp),
@@ -84,4 +92,4 @@ for i in range(len(latitude)):
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
     # Append to CSV, only include header in the first iteration
-    hourly_dataframe.to_csv(filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
+    hourly_dataframe.to_csv(csv_filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
