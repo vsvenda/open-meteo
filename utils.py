@@ -80,6 +80,7 @@ def gglow_csv(df, dictionary, csv_type):
         df['river_id'] = df['river_id'].map(dictionary)  # replace river_id values with meteo_station
         df.rename(columns={'river_id': 'meteo_station'}, inplace=True)
         df.rename(columns={'time': 'date-time'}, inplace=True)
+        df = df.sort_values(by=['meteo_station', 'date-time'], ascending=[True, True])
     elif csv_type == "historical":
         df = df.dropna(how='all')  # remove nan rows
         new_columns = [dictionary[int(col)] if int(col) in dictionary else col for col in df.columns]
