@@ -1,6 +1,7 @@
 import numpy as np
 
 def closest_quarters(n):
+    """ Calculate closes 4 quarters (resolution 0.25) """
     # Calculate the nearest lower multiple of 0.25
     lower = float(np.floor(n * 4) / 4)
     # Calculate the nearest higher multiple of 0.25
@@ -70,6 +71,24 @@ def bilinear_interpolation(x, y, x1, x2, y1, y2, T11, T12, T21, T22):
               T12 * (x2 - x) * (y - y1) +
               T22 * (x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1)))
     return np.round(T, 2)
+
+def gglow_csv(df, dictionary, csv_type):
+    """ Parse csv files created by geoglows API calls """
+    if csv_type == 'forecast':
+        df = df.dropna(how='all')  # remove nan rows
+        df.reset_index(inplace=True)
+        df['river_id'] = df['river_id'].map(dictionary)  # replace river_id values with meteo_station
+        df.rename(columns={'river_id': 'meteo_station'}, inplace=True)
+        df.rename(columns={'time': 'date-time'}, inplace=True)
+    elif csv_type == "historical":
+        df = df.dropna(how='all')  # remove nan rows
+        new_columns = [dictionary[int(col)] if int(col) in dictionary else col for col in df.columns]
+        df.columns = new_columns
+        df.reset_index(inplace=True)
+        df.rename(columns={'time': 'date-time'}, inplace=True)
+    else:
+        print("csv_type must be either forecast of historical")
+    return df
 
 
 
