@@ -7,6 +7,8 @@ __pycache__/
 *.csv
 *.txt
 *.cache.sqlite
+# But not requirements.txt
+!requirements.txt
 
 # C extensions
 *.so
