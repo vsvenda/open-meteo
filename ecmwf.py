@@ -17,12 +17,12 @@ from utils import closest_quarters, inverse_distance_weighting
 
 # Setup parameters for open-meteo forecast
 latitude = [43.35, 42.83, 43.74, 43.27, 43.80, 43.52, 43.16, 43.16, 42.85, 43.04, 42.60, 42.84, 42.96,
-            42.96, 42.73, 44.54, 44.76, 43.26, 44.09, 43.51, 44.44, 43.62, 43.93, 43.95]  # coordinates
+            42.96, 42.73, 44.54, 44.76, 43.26, 44.09, 43.51, 44.44, 43.62, 43.93, 43.95]  # geographic coordinates
 longitude = [19.36, 19.52, 19.71, 19.99, 19.30, 18.79, 18.85, 19.12, 19.88, 19.74, 19.94, 20.17, 19.58,
              19.10, 19.79, 19.23, 19.20, 18.61, 18.95, 18.45, 19.15, 19.37, 18.79, 19.57]
-meteo_station = ["Пљевља", "Колашин", "Златибор", "Сјеница", "Вишеград", "Фоча", "Плужине", "Жабљак",
-                 "Беране", "Бијело Поље", "Плав", "Рожаје", "Мојковац", "Шавник", "Андријевица", "Лозница",
-                 "Бијељина", "Чемерно", "Хан Пијесак", "Калиновик", "Зворник", "Рудо", "Соколац", "Горажде"]
+meteo_station = ["Pljevlja", "Kolašin", "Zlatibor", "Sjenica", "Višegrad", "Foča", "Plužine", "Žabljak",  # station names
+                 "Berane", "Bijelo Polje", "Plav", "Rožaje", "Mojkovac", "Šavnik", "Andrijevica", "Loznica",
+                 "Bijeljina", "Čemerno", "Han Pijesak", "Kalinovik", "Zvornik", "Rudo", "Sokolac", "Goražde"]
 past_days = 3  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
 forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 5, 7, 10, 15)
 
@@ -41,7 +41,7 @@ retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 for i in range(len(latitude)):
-    # Get four closest coordinates (open-meteo has 0.25 resolution)
+    # Get four closest coordinates (0.25 resolution)
     closest_latitude = closest_quarters(latitude[i])
     closest_longitude = closest_quarters(longitude[i])
 
@@ -77,14 +77,15 @@ for i in range(len(latitude)):
                    responses[2].Hourly().Variables(1).ValuesAsNumpy(), responses[3].Hourly().Variables(1).ValuesAsNumpy()]
     precipitation = inverse_distance_weighting(latitude[i], longitude[i], points, values_prec)
     precipitation = np.around(precipitation, decimals=2)  # round to 2 decimals
+
     # Create data frame from open-meteo results
-    hourly_data = {"Метеоролошка станица": [meteo_station[i]]*len(temp),
-                   "Датум и време": pd.date_range(
+    hourly_data = {"meteo-station": [meteo_station[i]]*len(temp),
+                   "date-time": pd.date_range(
                     start=pd.to_datetime(responses[0].Hourly().Time(), unit="s", utc=True),
                     end=pd.to_datetime(responses[0].Hourly().TimeEnd(), unit="s", utc=True),
                     freq=pd.Timedelta(seconds=responses[0].Hourly().Interval()),
                     inclusive="left"),
-                   "Температура": temp, "Падавине": precipitation}
+                   "temperature": temp, "precipitation": precipitation}
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
     # Append to CSV, only include header in the first iteration
