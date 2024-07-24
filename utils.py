@@ -3,7 +3,7 @@ import numpy as np
 
 def closest_quarters(point):
     """
-    Calculate closes 4 quarters (resolution 0.25)
+    Calculate closest quarters (resolution 0.25)
 
     Args:
         point: examined point

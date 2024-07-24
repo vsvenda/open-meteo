@@ -48,7 +48,7 @@ df_forecast_ensembles.to_csv(csv_forecast_ensembles, mode='a', index=False, enco
 print("\nFinished geoglows.data.forecast_ensembles.")
 
 # retrospective
-print("\n\nLaunching geoglows.data.retrospectives.")
+print("\n\nLaunching geoglows.data.retrospective.")
 df_retrospective = geoglows.data.retrospective(river_id=river_ids)
 df_retrospective = gglow_csv(df_retrospective, river_dict, "historical")
 print("\nWriting geoglows.data.retrospectives csv file.")
