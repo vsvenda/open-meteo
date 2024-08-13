@@ -23,7 +23,7 @@ longitude = [19.36, 19.52, 19.71, 19.99, 19.30, 18.79, 18.85, 19.12, 19.88, 19.7
 meteo_station = ["Pljevlja", "Kolašin", "Zlatibor", "Sjenica", "Višegrad", "Foča", "Plužine", "Žabljak",  # station names
                  "Berane", "Bijelo Polje", "Plav", "Rožaje", "Mojkovac", "Šavnik", "Andrijevica", "Loznica",
                  "Bijeljina", "Čemerno", "Han Pijesak", "Kalinovik", "Zvornik", "Rudo", "Sokolac", "Goražde"]
-past_days = 3  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
+past_days = 2  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
 forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 5, 7, 10, 15)
 
 # Create a filename with today's date to write results
@@ -89,7 +89,7 @@ for i in range(len(latitude)):
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
     # Append to CSV, only include header in the first iteration
-    hourly_dataframe.to_csv(csv_filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
+    hourly_dataframe.to_csv(csv_filename, mode='w', index=False, encoding='utf-8-sig', header=not i)
 
 # Restore the default stdout and close the file
 sys.stdout = sys.__stdout__
