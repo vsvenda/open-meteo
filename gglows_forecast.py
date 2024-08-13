@@ -24,7 +24,7 @@ meteo_stations = ["Uvac", "Kokin Brod", "Bistrica", "Piva", "HC Prijepolj",
 river_dict = dict(zip(river_ids, meteo_stations))
 
 # Create log file based on today's date and redirect print statements to it
-today_date = datetime.now().strftime('gglows_%Y-%m-%d')
+today_date = datetime.now().strftime('gglows_forecast_%Y-%m-%d')
 log_filename = f'{today_date}.txt'
 f = open(log_filename, 'w', encoding='utf-8')
 sys.stdout = f
@@ -47,20 +47,3 @@ csv_forecast_ensembles = datetime.now().strftime("forecast_ensembles_%Y-%m-%d.cs
 df_forecast_ensembles.to_csv(csv_forecast_ensembles, mode='w', index=False, encoding='utf-8-sig')
 print("\nFinished geoglows.data.forecast_ensembles.")
 
-# retrospective
-print("\n\nLaunching geoglows.data.retrospective.")
-df_retrospective = geoglows.data.retrospective(river_id=river_ids)
-df_retrospective = gglow_csv(df_retrospective, river_dict, "historical")
-print("\nWriting geoglows.data.retrospectives csv file.")
-csv_retrospective = "retrospective.csv"
-df_retrospective.to_csv(csv_retrospective, mode='w', index=False, encoding='utf-8-sig')
-print("\nFinished geoglows.data.retrospectives.")
-
-# daily_averages
-print("\n\nLaunching geoglows.data.daily_averages.")
-df_daily_averages = geoglows.data.daily_averages(river_id=river_ids)
-df_daily_averages = gglow_csv(df_daily_averages, river_dict, "historical")
-print("\nWriting geoglows.data.daily_averages csv file.")
-csv_daily_averages = datetime.now().strftime("daily_averages_%Y-%m-%d.csv")
-df_daily_averages.to_csv(csv_daily_averages, mode='w', index=False, encoding='utf-8-sig')
-print("\nFinished geoglows.data.daily_averages.")
