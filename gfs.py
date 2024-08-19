@@ -92,7 +92,7 @@ for i in range(len(latitude)):
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
     # Append to CSV, only include header in the first iteration
-    hourly_dataframe.to_csv(csv_filename, mode='w', index=False, encoding='utf-8-sig', header=not i)
+    hourly_dataframe.to_csv(csv_filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
 
 # Restore the default stdout and close the file
 sys.stdout = sys.__stdout__
