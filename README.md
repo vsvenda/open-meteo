@@ -17,7 +17,8 @@ You can customize the following parameters in the script according to your needs
 
 
 # Download streamflow info from geoglows (https://data.geoglows.org/):
-1. gglows.py
+1. gglows_forecast.py
+2. gglows_historical.py
 
 This Python script utilizes the geoglows python package to access and process river discharge data, both historical
 and forecasted. This is done through the following steps:
