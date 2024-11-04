@@ -5,7 +5,7 @@ import pandas as pd
 import sys
 from retry_requests import retry
 from datetime import datetime
-from utils import closest_quarters, inverse_distance_weighting
+from utils import closest_quarters, inverse_distance_weighting, standardized_csv_files
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -90,6 +90,9 @@ for i in range(len(latitude)):
 
     # Append to CSV, only include header in the first iteration
     hourly_dataframe.to_csv(csv_filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
+
+# Create standardized csv files for further use
+standardized_csv_files(csv_filename, 'ecmwf')
 
 # Restore the default stdout and close the file
 sys.stdout = sys.__stdout__

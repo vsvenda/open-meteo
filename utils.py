@@ -1,5 +1,6 @@
 import numpy as np
-
+import pandas as pd
+from datetime import datetime
 
 def closest_quarters(point):
     """
@@ -114,3 +115,51 @@ def gglow_csv(df, dictionary, csv_type):
     else:
         print("csv_type must be either forecast of historical")
     return df
+
+def standardized_csv_files(file_path, prefix):
+    # Load the CSV file
+    data = pd.read_csv(file_path)
+
+    # Convert date-time to pandas datetime object
+    data['date-time'] = pd.to_datetime(data['date-time'], errors='coerce')
+    data = data.dropna(subset=['date-time'])
+
+    # Filter out rows where temperature or precipitation is not numeric
+    data = data[data['temperature'].apply(lambda x: x.replace('.', '', 1).isdigit() if isinstance(x, str) else True)]
+    data = data[data['precipitation'].apply(lambda x: x.replace('.', '', 1).isdigit() if isinstance(x, str) else True)]
+
+    # Convert columns to numeric after filtering out non-numeric entries
+    data['temperature'] = data['temperature'].astype(float)
+    data['precipitation'] = data['precipitation'].astype(float)
+
+    # Define the current date and filter for historical and forecast data
+    today = pd.Timestamp.now().normalize()  # Current date at midnight
+    start_historical = today - pd.Timedelta(days=2)
+    end_forecast = today + pd.Timedelta(days=4)
+
+    # Create a column for date starting from 07:00 AM
+    data['date'] = (data['date-time'] - pd.Timedelta(hours=7)).dt.date
+
+    # Separate the data into historical and forecast based on date
+    historical_data = data[(data['date'] >= start_historical.date()) & (data['date'] < today.date())]
+    forecast_data = data[(data['date'] >= today.date()) & (data['date'] <= end_forecast.date())]
+
+    # Function to aggregate data for each meteo station
+    def aggregate_data(df, agg_func):
+        # Group by meteo-station and date, then apply the aggregation function
+        return df.groupby(['meteo-station', 'date']).agg(agg_func).unstack(level=0)
+
+    # Aggregate temperature (mean) and precipitation (sum) for historical and forecast data
+    temperature_historical = aggregate_data(historical_data, {'temperature': 'mean'})['temperature']
+    precipitation_historical = aggregate_data(historical_data, {'precipitation': 'sum'})['precipitation']
+    temperature_forecast = aggregate_data(forecast_data, {'temperature': 'mean'})['temperature']
+    precipitation_forecast = aggregate_data(forecast_data, {'precipitation': 'sum'})['precipitation']
+
+    # Save each dataframe to a separate CSV file with the current date in the filename
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    temperature_historical.to_csv(f'{prefix}_temp_hist_{current_date}.csv', index_label=None, encoding='utf-8-sig')
+    precipitation_historical.to_csv(f'{prefix}_precip_hist_{current_date}.csv', index_label=None, encoding='utf-8-sig')
+    temperature_forecast.to_csv(f'{prefix}_temp_forecast_{current_date}.csv', index_label=None, encoding='utf-8-sig')
+    precipitation_forecast.to_csv(f'{prefix}_precip_forecast_{current_date}.csv', index_label=None, encoding='utf-8-sig')
+
+    print("CSV files have been created successfully.")

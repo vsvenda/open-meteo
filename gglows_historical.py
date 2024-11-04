@@ -1,7 +1,8 @@
 import geoglows
 from utils import gglow_csv
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
+import pandas as pd
 
 # ----------------------------------------------------------------------------------------------------------------------
 # geoglows.data module
@@ -30,13 +31,13 @@ f = open(log_filename, 'w', encoding='utf-8')
 sys.stdout = f
 
 # retrospective
-print("\n\nLaunching geoglows.data.retrospective.")
-df_retrospective = geoglows.data.retrospective(river_id=river_ids)
-df_retrospective = gglow_csv(df_retrospective, river_dict, "historical")
-print("\nWriting geoglows.data.retrospectives csv file.")
-csv_retrospective = "retrospective.csv"
-df_retrospective.to_csv(csv_retrospective, mode='w', index=False, encoding='utf-8-sig')
-print("\nFinished geoglows.data.retrospectives.")
+# print("\n\nLaunching geoglows.data.retrospective.")
+# df_retrospective = geoglows.data.retrospective(river_id=river_ids)
+# df_retrospective = gglow_csv(df_retrospective, river_dict, "historical")
+# print("\nWriting geoglows.data.retrospectives csv file.")
+# csv_retrospective = "retrospective.csv"
+# df_retrospective.to_csv(csv_retrospective, mode='w', index=False, encoding='utf-8-sig')
+# print("\nFinished geoglows.data.retrospectives.")
 
 # daily_averages
 print("\n\nLaunching geoglows.data.daily_averages.")
@@ -44,5 +45,19 @@ df_daily_averages = geoglows.data.daily_averages(river_id=river_ids)
 df_daily_averages = gglow_csv(df_daily_averages, river_dict, "historical")
 print("\nWriting geoglows.data.daily_averages csv file.")
 csv_daily_averages = datetime.now().strftime("daily_averages_%Y-%m-%d.csv")
-df_daily_averages.to_csv(csv_daily_averages, mode='w', index=False, encoding='utf-8-sig')
+df_daily_averages.to_csv(csv_daily_averages, mode='w', index=False, encoding='utf-8-sig', date_format='%m-%d')
 print("\nFinished geoglows.data.daily_averages.")
+
+# standardized csv file for ML models
+current_year = datetime.now().year
+df_daily_averages['date-time'] = pd.to_datetime(df_daily_averages['date-time'] + f'/{current_year}', format='%m/%d/%Y',
+                                                errors='coerce')
+df_daily_averages = df_daily_averages.dropna(subset=['date-time'])
+today = datetime.now()
+seven_days_ago = today - timedelta(days=7)
+standardized_data = df_daily_averages[(df_daily_averages['date-time'] >= pd.Timestamp(seven_days_ago.date())) &
+                                      (df_daily_averages['date-time'] < pd.Timestamp(today.date()))]
+standardized_data.loc[:, 'date-time'] = standardized_data['date-time'].dt.date
+standardized_data = standardized_data.rename(columns={'date-time': 'date'})
+output_file = f'gglows_discharge_{today.strftime("%Y-%m-%d")}.csv'
+standardized_data.to_csv(output_file, index=False)

@@ -5,7 +5,7 @@ import sys
 import numpy as np
 from retry_requests import retry
 from datetime import datetime
-from utils import closest_quarters, inverse_distance_weighting
+from utils import closest_quarters, inverse_distance_weighting, standardized_csv_files
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ forecast_days = 7  # weather info for how many future days (possible values: 1, 
 csv_filename = datetime.now().strftime("gfs_%Y-%m-%d.csv")
 
 # Create log file based on today's date and redirect print statements to it
-today_date = datetime.now().strftime('gsf_%Y-%m-%d')
+today_date = datetime.now().strftime('gfs_%Y-%m-%d')
 log_filename = f'{today_date}.txt'
 f = open(log_filename, 'w', encoding='utf-8')
 sys.stdout = f
@@ -93,6 +93,9 @@ for i in range(len(latitude)):
 
     # Append to CSV, only include header in the first iteration
     hourly_dataframe.to_csv(csv_filename, mode='a', index=False, encoding='utf-8-sig', header=not i)
+
+# Create standardized csv files for further use
+standardized_csv_files(csv_filename, 'gfs')
 
 # Restore the default stdout and close the file
 sys.stdout = sys.__stdout__
