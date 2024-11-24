@@ -15,35 +15,31 @@ import sys
 # To find a LINKNO (river ID number), please refer to https://data.geoglows.org and browse the tutorials.
 # ----------------------------------------------------------------------------------------------------------------------
 
-# Define river ids (LINKNO) and names
-river_ids = [220252711, 220249952, 220212799, 220227955, 220232074,
-             220267840, 220302223, 220284319, 220348963, 220214203]
-meteo_stations = ["Uvac", "Kokin Brod", "Bistrica", "Piva", "HS Prijepolje",
-                  "Potpeć", "Višegrad", "Bajina Bašta", "Zvornik", "HS Djurdjevića Tara"]
-# Create river dictionary
-river_dict = dict(zip(river_ids, meteo_stations))
+def gglows_forecast(river_ids, meteo_stations):
+    # Create river dictionary
+    river_dict = dict(zip(river_ids, meteo_stations))
 
-# Create log file based on today's date and redirect print statements to it
-today_date = datetime.now().strftime('gglows_forecast_%Y-%m-%d')
-log_filename = f'{today_date}.txt'
-f = open(log_filename, 'w', encoding='utf-8')
-sys.stdout = f
+    # Create log file based on today's date and redirect print statements to it
+    today_date = datetime.now().strftime('gglows_forecast_%Y-%m-%d')
+    log_filename = f'{today_date}.txt'
+    f = open(log_filename, 'w', encoding='utf-8')
+    sys.stdout = f
 
-# forecast
-print("Launching geoglows.data.forecast.")
-df_forecast = geoglows.data.forecast(river_id=river_ids)
-df_forecast = gglow_csv(df_forecast, river_dict, "forecast")
-print("\nWriting geoglows.data.forecast csv file.")
-csv_forecast = datetime.now().strftime("forecast_%Y-%m-%d.csv")
-df_forecast.to_csv(csv_forecast, mode='w', index=False, encoding='utf-8-sig')
-print("\nFinished geoglows.data.forecast.")
+    # forecast
+    print("Launching geoglows.data.forecast.")
+    df_forecast = geoglows.data.forecast(river_id=river_ids)
+    df_forecast = gglow_csv(df_forecast, river_dict, "forecast")
+    print("\nWriting geoglows.data.forecast csv file.")
+    csv_forecast = datetime.now().strftime("forecast_%Y-%m-%d.csv")
+    df_forecast.to_csv(csv_forecast, mode='w', index=False, encoding='utf-8-sig')
+    print("\nFinished geoglows.data.forecast.")
 
-# forecast_ensembles
-print("\n\nLaunching geoglows.data.forecast_ensembles.")
-df_forecast_ensembles = geoglows.data.forecast_ensembles(river_id=river_ids)
-df_forecast_ensembles = gglow_csv(df_forecast_ensembles, river_dict, "forecast")
-print("\nWriting geoglows.data.forecast_ensembles csv file.")
-csv_forecast_ensembles = datetime.now().strftime("forecast_ensembles_%Y-%m-%d.csv")
-df_forecast_ensembles.to_csv(csv_forecast_ensembles, mode='w', index=False, encoding='utf-8-sig')
-print("\nFinished geoglows.data.forecast_ensembles.")
+    # forecast_ensembles
+    print("\n\nLaunching geoglows.data.forecast_ensembles.")
+    df_forecast_ensembles = geoglows.data.forecast_ensembles(river_id=river_ids)
+    df_forecast_ensembles = gglow_csv(df_forecast_ensembles, river_dict, "forecast")
+    print("\nWriting geoglows.data.forecast_ensembles csv file.")
+    csv_forecast_ensembles = datetime.now().strftime("forecast_ensembles_%Y-%m-%d.csv")
+    df_forecast_ensembles.to_csv(csv_forecast_ensembles, mode='w', index=False, encoding='utf-8-sig')
+    print("\nFinished geoglows.data.forecast_ensembles.")
 
