@@ -64,7 +64,7 @@ specific = ['Sjenica_temp', 'Rožaje_temp', 'Bijelo Polje_temp', 'Zlatibor_temp'
 station = 'Kokin Brod'
 # Prepare input data
 X_forecast = prepare_forecast_data(all_stations[specific], flow[station], 7)
-print(X_forecast)
+X_forecast = np.nan_to_num(X_forecast)
 
 folder_path = ''
 
