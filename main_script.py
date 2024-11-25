@@ -41,7 +41,7 @@ meteo_station = ["Pljevlja", "Kolašin", "Zlatibor", "Sjenica", "Višegrad", "Fo
 river_ids = [220252711, 220249952, 220212799, 220227955, 220232074,
              220267840, 220302223, 220284319, 220348963, 220214203]
 hydro_stations = ["Uvac", "Kokin Brod", "Bistrica", "Piva", "HS Prijepolje",
-                  "Potpeć", "Višegrad", "Bajina Bašta", "Zvornik", "HS Djurdjevića Tara"]
+                  "Potpeć", "Višegrad", "Bajina Bašta", "Zvornik", "HS Đurđevića Tara"]
 
 past_days = 2  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
 forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 5, 7, 10, 15)
@@ -61,26 +61,81 @@ flow = pd.read_csv('gglows_discharge_2024-11-24.csv', parse_dates=[0], index_col
 
 
 all_stations = pd.merge(temp, prec, on='date', suffixes=['_temp', '_pad'])
-# kokin brod
-specific = ['Sjenica_temp', 'Rožaje_temp', 'Bijelo Polje_temp', 'Zlatibor_temp', 'Sjenica_pad', 'Rožaje_pad', 'Bijelo Polje_pad', 'Zlatibor_pad']
-station = 'Kokin Brod'
-# Prepare input data
-X_forecast = prepare_forecast_data(all_stations[specific], flow[station], 7)
-X_forecast = np.nan_to_num(X_forecast)
 
-folder_path = ''
+# Define meteo for hydro_stations
+meteo_stations_visegrad = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac', 'Kolašin', 'Bijelo Polje', 
+                           'Sjenica', 'Pljevlja', 'Šavnik', 'Žabljak', 'Plužine', 'Čemerno', 'Kalinovik', 'Foča', 
+                           'Goražde','Rudo', 'Višegrad', 'Zlatibor','Sokolac', 'Han Pijesak']
+meteo_stations_bbasta = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac', 'Kolašin', 'Bijelo Polje', 
+                         'Sjenica', 'Pljevlja', 'Šavnik', 'Žabljak', 'Plužine', 'Čemerno', 'Kalinovik', 'Foča', 
+                         'Goražde', 'Rudo', 'Višegrad', 'Zlatibor','Sokolac', 'Han Pijesak']
+meteo_stations_zvornik = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac', 'Kolašin', 'Bijelo Polje', 
+                          'Sjenica','Pljevlja', 'Šavnik', 'Žabljak', 'Plužine', 'Čemerno', 'Kalinovik', 'Foča', 
+                          'Goražde', 'Rudo', 'Višegrad', 'Zlatibor','Sokolac', 'Han Pijesak', 'Zvornik']
+meteo_stations_piva = ['Čemerno', 'Plužine', 'Šavnik', 'Žabljak']
+meteo_stations_uvac = ['Sjenica', 'Rožaje', 'Bijelo Polje']
+meteo_stations_kbrod = ['Sjenica', 'Rožaje', 'Bijelo Polje', 'Zlatibor']
+meteo_stations_bistrica = ['Sjenica', 'Rožaje', 'Bijelo Polje', 'Zlatibor']
+meteo_stations_potpec = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac', 'Kolašin', 'Bijelo Polje', 
+                         'Sjenica', 'Pljevlja', 'Rudo', 'Zlatibor']
+meteo_stations_prijepolje = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac', 'Kolašin', 'Bijelo Polje', 
+                         'Sjenica', 'Pljevlja']
+meteo_stations_tara = ['Pljevlja', 'Žabljak', 'Šavnik', 'Kolašin', 'Mojkovac', 'Andrijevica']
+pick = {'Višegrad': meteo_stations_visegrad,
+        'Bajina Bašta': meteo_stations_bbasta,
+        'Zvornik': meteo_stations_zvornik,
+        'Piva': meteo_stations_piva,
+        'Uvac': meteo_stations_uvac,
+        'Kokin Brod': meteo_stations_kbrod,
+        'Bistrica': meteo_stations_bistrica,
+        'Potpeć': meteo_stations_potpec,
+        'HS Prijepolje': meteo_stations_prijepolje,
+        'HS Đurđevića Tara': meteo_stations_tara}
 
-model_tcn = load_model(folder_path+'kokin_brod_tcn_pinball.keras', custom_objects={'PinballLoss': PinballLoss, 'TCN':TCN})
-print(model_tcn.summary())
+# Fill in the hydrological stations later (few models not available)
+hydro_stations = ["Uvac", "Kokin Brod", "Piva", "HS Prijepolje", "Zvornik"]
 
-model_lstm = load_model(folder_path+'kokin_brod_lstm_pinball.keras', custom_objects={'PinballLoss': PinballLoss})
-print(model_lstm.summary())
-
-model_tkan = load_model(folder_path+'kokin_brod_tkan_pinball.keras', custom_objects={'PinballLoss': PinballLoss})
-print(model_tkan.summary())
-
-X_forecast = np.nan_to_num(X_forecast)
-
-lstm_forecast = model_lstm.predict(X_forecast[None, :])
-tcn_forecast = model_tcn.predict(X_forecast[None, :])
-tkan_forecast = model_tkan.predict(X_forecast[None, :])
+# Go through all the hydro_stations
+for hydro_station in hydro_stations:
+    meteo_stations = pick[hydro_station]
+    specific = [f'{station}_temp' for station in meteo_stations] + [f'{station}_pad' for station in meteo_stations]
+    
+    # Prepare input data
+    X_forecast = prepare_forecast_data(all_stations[specific], flow[hydro_station], 7)
+    X_forecast = np.nan_to_num(X_forecast)
+    
+    folder_path = '' + hydro_station
+    
+    model_tcn = load_model(folder_path+'_tcn_pinball.keras', custom_objects={'PinballLoss': PinballLoss, 'TCN':TCN})
+    print(model_tcn.summary())
+    
+    model_lstm = load_model(folder_path+'_lstm_pinball.keras', custom_objects={'PinballLoss': PinballLoss})
+    print(model_lstm.summary())
+    
+    model_tkan = load_model(folder_path+'_tkan_pinball.keras', custom_objects={'PinballLoss': PinballLoss})
+    print(model_tkan.summary())
+    
+    X_forecast = np.nan_to_num(X_forecast)
+    
+    # Generate a date range starting from today
+    forecast_dates = [datetime.now().date() + timedelta(days=i) for i in range(5)]
+    lstm_forecast = model_lstm.predict(X_forecast[None, :])
+    lstm_df = pd.DataFrame({
+    'Date': forecast_dates,
+    'LSTM_Forecast': lstm_forecast[0]
+})
+    tcn_forecast = model_tcn.predict(X_forecast[None, :])
+    tcn_df = pd.DataFrame({
+    'Date': forecast_dates,
+    'TCN_Forecast': tcn_forecast[0]
+})
+    tkan_forecast = model_tkan.predict(X_forecast[None, :])
+    tkan_df = pd.DataFrame({
+    'Date': forecast_dates,
+    'TKAN_Forecast': tkan_forecast[0]
+})
+    
+    # Optionally, save the DataFrames to CSV or display them
+    lstm_df.to_csv(f"{hydro_station}_lstm_forecast.csv", index=False)
+    tcn_df.to_csv(f"{hydro_station}_tcn_forecast.csv", index=False)
+    tkan_df.to_csv(f"{hydro_station}_tkan_forecast.csv", index=False)
