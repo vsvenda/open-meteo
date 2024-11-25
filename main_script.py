@@ -9,7 +9,10 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tkan import TKAN
 from tcn import TCN
-from datetime import datetime
+from GNN_model import GNN
+from data_utils_gnn import prepare_data_for_gnn
+import pickle
+import torch
 from datetime import datetime, timedelta
 
 class PinballLoss(tf.keras.losses.Loss):
@@ -122,7 +125,7 @@ for hydro_station in hydro_stations:
     X_forecast = prepare_forecast_data(all_stations[specific], flow[hydro_station], 7)
     X_forecast = np.nan_to_num(X_forecast)
     
-    folder_path = '' + hydro_station
+    folder_path = 'models/' + hydro_station
     
     model_tcn = load_model(folder_path+'_tcn_pinball.keras', custom_objects={'PinballLoss': PinballLoss, 'TCN':TCN})
     print(model_tcn.summary())
@@ -157,3 +160,33 @@ for hydro_station in hydro_stations:
     lstm_df.to_csv(f"{hydro_station}_lstm_forecast.csv", index=False)
     tcn_df.to_csv(f"{hydro_station}_tcn_forecast.csv", index=False)
     tkan_df.to_csv(f"{hydro_station}_tkan_forecast.csv", index=False)
+
+#GNN Forecasting
+device = 'cpu'
+forecast = 5
+q_stations = ['HS Prijepolje', 'Potpeć', 'Uvac', 'Kokin Brod', 'Bistrica','Piva', 'Višegrad' , 'Bajina Bašta', 'Zvornik' ,'HS Đurđevića Tara']
+m_stations = ['Plav','Andrijevica','Kolašin','Berane', 'Mojkovac', 'Pljevlja', 'Rožaje', 'Sjenica', 'Bijelo Polje', 'Rudo', 'Zlatibor',
+             'Zvornik', 'Han Pijesak', 'Sokolac', 'Višegrad', 'Kalinovik', 'Foča', 'Goražde', 'Čemerno', 'Plužine',
+             'Šavnik', 'Žabljak']
+
+num_m_nodes = len(m_stations) * 2
+num_nodes = len(q_stations) + num_m_nodes
+gnn_input = prepare_data_for_gnn(prec, temp, flow, m_stations, q_stations, lag = 7)
+with open('models/Sve_with_residual_linear_first.pkl', 'rb') as f:
+    configs=pickle.load(f)
+model = GNN(gnn_input.x.shape[1], configs['hidden_dim'],forecast,configs['num_layers'],configs['num_linear_layers'],configs['dropout'], beta = True, heads=configs['num_heads']).to(device)
+model.load_state_dict(torch.load('models/best_v1_sve_with_residual_linear_first_weights.pth',map_location=torch.device('cpu'), weights_only = False))
+model.eval()
+with torch.no_grad():
+    output = model(gnn_input.x, gnn_input.edge_index)
+    output = output.view(-1, num_nodes, forecast)[:,num_m_nodes:num_nodes,:]
+    
+columns = ['Datum'] + q_stations
+gnn_forecast = pd.DataFrame(columns = columns)
+forecast_dates = [datetime.now().date() + timedelta(days=i) for i in range(forecast)]
+gnn_forecast['Datum'] = forecast_dates
+
+for i, station in enumerate(q_stations):
+    gnn_forecast[station] = output[0,i,:]
+    
+gnn_forecast.to_csv("gnn_forecast.csv", index=False)
