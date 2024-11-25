@@ -47,7 +47,7 @@ forecast_days = 7  # weather info for how many future days (possible values: 1, 
 
 ecmwf(longitude, latitude, meteo_station, past_days, forecast_days)
 gfs(longitude, latitude, meteo_station, past_days, forecast_days)
-gglows_forecast(river_ids, hydro_stations)
+gglows_historical(river_ids, hydro_stations)
 
 a = pd.read_csv('ecmwf_precip_hist_2024-11-24.csv', parse_dates=[0], index_col=0)
 b =pd.read_csv('ecmwf_precip_forecast_2024-11-24.csv', parse_dates=[0], index_col=0)
