@@ -51,13 +51,28 @@ gfs(longitude, latitude, meteo_station, past_days, forecast_days)
 weather(longitude, latitude, meteo_station, past_days, forecast_days)
 gglows_historical(river_ids, hydro_stations)
 
-a = pd.read_csv('ecmwf_precip_hist_2024-11-24.csv', parse_dates=[0], index_col=0)
-b =pd.read_csv('ecmwf_precip_forecast_2024-11-24.csv', parse_dates=[0], index_col=0)
-prec = pd.concat([a,b])
-a = pd.read_csv('ecmwf_temp_hist_2024-11-24.csv', parse_dates=[0], index_col=0)
-b =pd.read_csv('ecmwf_temp_forecast_2024-11-24.csv', parse_dates=[0], index_col=0)
-temp = pd.concat([a,b])
-flow = pd.read_csv('gglows_discharge_2024-11-24.csv', parse_dates=[0], index_col=0)
+# Get today's date in the required format
+today_str = datetime.now().strftime('%Y-%m-%d')
+
+# Define dynamic file names using today's date
+precip_hist_file = f'ecmwf_precip_hist_{today_str}.csv'
+precip_forecast_file = f'ecmwf_precip_forecast_{today_str}.csv'
+temp_hist_file = f'ecmwf_temp_hist_{today_str}.csv'
+temp_forecast_file = f'ecmwf_temp_forecast_{today_str}.csv'
+flow_file = f'gglows_discharge_{today_str}.csv'
+
+# Load and concatenate precipitation data
+a = pd.read_csv(precip_hist_file, parse_dates=[0], index_col=0)
+b = pd.read_csv(precip_forecast_file, parse_dates=[0], index_col=0)
+prec = pd.concat([a, b])
+
+# Load and concatenate temperature data
+a = pd.read_csv(temp_hist_file, parse_dates=[0], index_col=0)
+b = pd.read_csv(temp_forecast_file, parse_dates=[0], index_col=0)
+temp = pd.concat([a, b])
+
+# Load flow data
+flow = pd.read_csv(flow_file, parse_dates=[0], index_col=0)
 
 
 all_stations = pd.merge(temp, prec, on='date', suffixes=['_temp', '_pad'])
@@ -81,6 +96,7 @@ meteo_stations_potpec = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac',
 meteo_stations_prijepolje = ['Plav', 'Andrijevica', 'Berane', 'Rožaje', 'Mojkovac', 'Kolašin', 'Bijelo Polje', 
                          'Sjenica', 'Pljevlja']
 meteo_stations_tara = ['Pljevlja', 'Žabljak', 'Šavnik', 'Kolašin', 'Mojkovac', 'Andrijevica']
+
 pick = {'Višegrad': meteo_stations_visegrad,
         'Bajina Bašta': meteo_stations_bbasta,
         'Zvornik': meteo_stations_zvornik,
