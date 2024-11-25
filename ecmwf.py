@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import openmeteo_requests
 import requests_cache
@@ -84,6 +85,7 @@ def ecmwf(longitude, latitude, meteo_station, past_days, forecast_days):
     print(precipitation, " nnn ", temp, " nnn ", values_prec)
     # Create standardized csv files for further use
     standardized_csv_files(csv_filename, 'ecmwf')
+    os.remove(csv_filename)
 
     # Restore the default stdout and close the file
     sys.stdout = sys.__stdout__

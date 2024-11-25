@@ -41,7 +41,7 @@ def gglows_historical(river_ids, meteo_stations):
     df_daily_averages = gglow_csv(df_daily_averages, river_dict, "historical")
     print("\nWriting geoglows.data.daily_averages csv file.")
     csv_daily_averages = datetime.now().strftime("daily_averages_%Y-%m-%d.csv")
-    df_daily_averages.to_csv(csv_daily_averages, mode='w', index=False, encoding='utf-8-sig', date_format='%m-%d')
+    # df_daily_averages.to_csv(csv_daily_averages, mode='w', index=False, encoding='utf-8-sig', date_format='%m-%d')
     print("\nFinished geoglows.data.daily_averages.")
 
     # standardized csv file for ML models

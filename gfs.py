@@ -1,3 +1,4 @@
+import os
 import openmeteo_requests
 import requests_cache
 import pandas as pd
@@ -85,6 +86,7 @@ def gfs(longitude, latitude, meteo_station, past_days, forecast_days):
 
     # Create standardized csv files for further use
     standardized_csv_files(csv_filename, 'gfs')
+    os.remove(csv_filename)
 
     # Restore the default stdout and close the file
     sys.stdout = sys.__stdout__
