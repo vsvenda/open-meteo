@@ -33,24 +33,37 @@ def inverse_distance_weighting(x, y, points, values, power=2):
     Returns:
         Interpolated value at the point (x, y)
     """
-    # Initialize numerator and denominator for IDW
-    weighted_sum = 0
-    weight_sum = 0
+    # Ensure values are NumPy arrays
+    values = [np.array(v) for v in values]
+
+    # Initialize numerator and denominator for IDW as arrays of zeros
+    weighted_sum = np.zeros_like(values[0], dtype=np.float64)
+    weight_sum = np.zeros_like(values[0], dtype=np.float64)
+
     # Compute weights and weighted values
     for (x0, y0), v in zip(points, values):
         distance = np.sqrt((x - x0) ** 2 + (y - y0) ** 2)
+
         if distance > 0:  # To avoid division by zero
             weight = 1 / distance ** power
-            weighted_sum += weight * v
-            weight_sum += weight
+
+            # Mask for valid (non-NaN) values
+            valid_mask = ~np.isnan(v)
+
+            # Add weighted values where valid (ignoring NaNs)
+            weighted_sum[valid_mask] += weight * v[valid_mask]
+            weight_sum[valid_mask] += weight
         else:
             # If the target point coincides with one of the data points
-            return v
-    # Compute the final interpolated value
-    if weight_sum > 0:
-        return weighted_sum / weight_sum
-    else:
-        return None
+            return np.where(~np.isnan(v), v, np.nan)
+
+    # Final result: weighted_sum / weight_sum where weight_sum > 0
+    result = np.divide(weighted_sum, weight_sum, where=weight_sum > 0)
+
+    # Assign NaN where no valid weights exist
+    result[weight_sum == 0] = np.nan
+
+    return result
 
 
 def bilinear_interpolation(x, y, x1, x2, y1, y2, T11, T12, T21, T22):
