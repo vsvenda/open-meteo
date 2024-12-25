@@ -37,7 +37,7 @@ latitude = [43.35, 42.83, 43.74, 43.27, 43.80, 43.52, 43.16, 43.16, 42.85, 43.04
             42.96, 42.73, 44.54, 44.76, 43.26, 44.09, 43.51, 44.44, 43.62, 43.93, 43.95]  # geographic coordinates
 longitude = [19.36, 19.52, 19.71, 19.99, 19.30, 18.79, 18.85, 19.12, 19.88, 19.74, 19.94, 20.17, 19.58,
              19.10, 19.79, 19.23, 19.20, 18.61, 18.95, 18.45, 19.15, 19.37, 18.79, 19.57]
-meteo_station = ["Pljevlja", "Kolašin", "Zlatibor", "Sjenica", "Višegrad", "Foča", "Plužine", "Žabljak",
+meteo_station_openm = ["Pljevlja", "Kolašin", "Zlatibor", "Sjenica", "Višegrad", "Foča", "Plužine", "Žabljak",
                  # station names
                  "Berane", "Bijelo Polje", "Plav", "Rožaje", "Mojkovac", "Šavnik", "Andrijevica", "Loznica",
                  "Bijeljina", "Čemerno", "Han Pijesak", "Kalinovik", "Zvornik", "Rudo", "Sokolac", "Goražde"]
@@ -45,7 +45,7 @@ meteo_station = ["Pljevlja", "Kolašin", "Zlatibor", "Sjenica", "Višegrad", "Fo
 # Define river ids (LINKNO) and names
 river_ids = [220252711, 220249952, 220212799, 220227955, 220232074,
              220267840, 220302223, 220284319, 220348963, 220214203]
-hydro_stations = ["Uvac", "Kokin Brod", "Bistrica", "Piva", "HS Prijepolje",
+hydro_stations_gglows = ["Uvac", "Kokin Brod", "Bistrica", "Piva", "HS Prijepolje",
                   "Potpeć", "Višegrad", "Bajina Bašta", "Zvornik", "HS Đurđevića Tara"]
 
 all_nwpm = ['ecmwf', 'gfs', 'weather']
@@ -88,10 +88,10 @@ hydro_stations_reduced = ["Uvac", "Kokin Brod", "Piva", "HS Prijepolje", "Zvorni
 past_days = 2  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
 forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 5, 7, 10, 15)
 
-ecmwf(longitude, latitude, meteo_station, past_days, forecast_days)
-gfs(longitude, latitude, meteo_station, past_days, forecast_days)
-weather(longitude, latitude, meteo_station, past_days, forecast_days)
-gglows_historical(river_ids, hydro_stations)
+ecmwf(longitude, latitude, meteo_station_openm, past_days, forecast_days)
+gfs(longitude, latitude, meteo_station_openm, past_days, forecast_days)
+weather(longitude, latitude, meteo_station_openm, past_days, forecast_days)
+gglows_historical(river_ids, hydro_stations_gglows)
 
 # Get today's date in the required format
 today_str = datetime.now().strftime('%Y-%m-%d')
