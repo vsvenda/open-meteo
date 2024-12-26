@@ -83,7 +83,6 @@ pick = {'Višegrad': meteo_stations_visegrad,
 
 # Fill in the hydrological stations later (few models not available)
 hydro_stations = ['HS Prijepolje', 'Potpeć', 'Uvac', 'Kokin Brod', 'Bistrica','Piva', 'Višegrad' , 'Bajina Bašta', 'Zvornik' ,'HS Đurđevića Tara']
-hydro_stations_reduced = ["Uvac", "Kokin Brod", "Piva", "HS Prijepolje", "Zvornik"]
 
 past_days = 2  # weather info for how many past days (possible values: 0, 1, 2, 3, 5, 7, 14, 31, 61, 92)
 forecast_days = 7  # weather info for how many future days (possible values: 1, 3, 5, 7, 10, 15)
@@ -122,7 +121,7 @@ for nwpm in all_nwpm:
     all_stations[nwpm] = pd.merge(temp, prec, on='date', suffixes=['_temp', '_pad'])
 
 # Go through all the hydro_stations
-for hydro_station in hydro_stations_reduced:
+for hydro_station in hydro_stations:
     meteo_stations = pick[hydro_station]
     specific = [f'{station}_temp' for station in meteo_stations] + [f'{station}_pad' for station in meteo_stations]
 
