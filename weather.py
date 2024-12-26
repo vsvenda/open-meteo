@@ -40,7 +40,8 @@ def weather(longitude, latitude, meteo_station, past_days, forecast_days):
             "longitude": [closest_longitude[0], closest_longitude[1], closest_longitude[1], closest_longitude[0]],
             "hourly": ["temperature_2m", "precipitation"],
             "past_days": past_days,
-            "forecast_days": forecast_days
+            "forecast_days": forecast_days,
+            "apikey": "<INSERT API KEY HERE>"
         }
         responses = openmeteo.weather_api(url, params=params)
 
