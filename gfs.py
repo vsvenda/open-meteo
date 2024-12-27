@@ -35,13 +35,14 @@ def gfs(longitude, latitude, meteo_station, past_days, forecast_days):
         closest_longitude = closest_quarters(longitude[i])
 
         # API call
-        url = "https://api.open-meteo.com/v1/gfs"
+        url = "https://customer-api.open-meteo.com/v1/forecast"
         params = {
             "latitude": [closest_latitude[0], closest_latitude[1], closest_latitude[0], closest_latitude[1]],
             "longitude": [closest_longitude[0], closest_longitude[1], closest_longitude[1], closest_longitude[0]],
             "hourly": ["temperature_2m", "precipitation"],
             "past_days": past_days,
             "forecast_days": forecast_days,
+            "models": "gfs_seamless",
             "apikey": "<INSERT API KEY HERE>"
         }
         responses = openmeteo.weather_api(url, params=params)
